@@ -10,7 +10,7 @@ Continuous is a framework to upgrade a daemon binary without interrupt
 
 # Demo
 
-[source code][./demo/main.go]
+[source code](./demo/main.go)
 
 # TODO
 - [ ] Add unittests
