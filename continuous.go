@@ -1,6 +1,7 @@
 package continuous
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -64,9 +65,10 @@ type ListenOn struct {
 
 // ContServer combines listener, addresss and a continuous
 type ContServer struct {
-	lis      net.Listener
-	srv      Continuous
-	listenOn *ListenOn
+	lis       net.Listener
+	srv       Continuous
+	listenOn  *ListenOn
+	tlsConfig *tls.Config
 }
 
 // Option to new a Cont
@@ -125,9 +127,21 @@ func New(opts ...Option) *Cont {
 	return cont
 }
 
+type ServerOption func(cs *ContServer)
+
+func TLSConfig(c *tls.Config) func(cs *ContServer) {
+	return func(cs *ContServer) {
+		cs.tlsConfig = c
+	}
+}
+
 // AddServer and a server which implement Continuous interface
-func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn) {
-	cont.servers = append(cont.servers, &ContServer{srv: srv, listenOn: listenOn})
+func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOption) {
+	cs := &ContServer{srv: srv, listenOn: listenOn}
+	for _, o := range opts {
+		o(cs)
+	}
+	cont.servers = append(cont.servers, cs)
 }
 
 // Serve run all the servers and wait to handle signals
@@ -259,6 +273,9 @@ func (cont *Cont) serve() error {
 			return err
 		}
 		server.lis = lis
+		if server.tlsConfig != nil {
+			server.lis = tls.NewListener(lis, server.tlsConfig)
+		}
 
 		cont.wg.Add(1)
 		go func(server *ContServer) {
