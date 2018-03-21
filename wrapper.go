@@ -2,6 +2,7 @@ package continuous
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"google.golang.org/grpc"
@@ -20,6 +21,19 @@ func (s *httpServer) GracefulStop() error {
 
 func WrapHTTPServer(s *http.Server) Continuous {
 	return &httpServer{s}
+}
+
+type httpServerTLS struct {
+	*httpServer
+	certFile string
+	keyFile  string
+}
+
+func WrapHTTPServerTLS(s *http.Server, certFile, keyFile string) Continuous {
+	return &httpServerTLS{httpServer: &httpServer{s}, certFile: certFile, keyFile: keyFile}
+}
+func (s *httpServerTLS) Serve(lis net.Listener) error {
+	return s.ServeTLS(lis, s.certFile, s.keyFile)
 }
 
 type grpcServer struct {
