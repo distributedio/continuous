@@ -245,6 +245,9 @@ func (cont *Cont) closeListeners() {
 			cont.logger.Error("close listener failed", logbunny.Err(err), logbunny.String("listenon", server.listenOn.Address))
 		}
 	}
+	// gracenet internal stores all the active listeners. When we close listeners here, we can not notify gracenet about this
+	// so it will keep those closed listeners and try to pass to child process which cause errors, so we reinit net here
+	cont.net = gnet.Net{}
 }
 
 func (cont *Cont) serve() error {
