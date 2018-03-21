@@ -162,10 +162,10 @@ func (cont *Cont) Serve() error {
 		cont.logger.Info("got signal", logbunny.Stringer("value", sig))
 		switch sig {
 		case syscall.SIGTERM:
-			cont.stop()
+			cont.Stop()
 			return nil
 		case syscall.SIGQUIT:
-			cont.gracefulStop()
+			cont.GracefulStop()
 			return nil
 		case syscall.SIGUSR1:
 			if cont.state == Running {
@@ -187,7 +187,7 @@ func (cont *Cont) Serve() error {
 				cont.logger.Error("upgrade binary failed", logbunny.Err(err))
 				continue
 			}
-			if err := cont.gracefulStop(); err != nil {
+			if err := cont.GracefulStop(); err != nil {
 				cont.logger.Error("upgrade binary failed", logbunny.Err(err))
 				continue
 			}
@@ -214,7 +214,7 @@ func (cont *Cont) Serve() error {
 	}
 }
 
-func (cont *Cont) stop() error {
+func (cont *Cont) Stop() error {
 	close(cont.doneChan)
 	for _, server := range cont.servers {
 		if err := server.srv.Stop(); err != nil {
@@ -225,7 +225,7 @@ func (cont *Cont) stop() error {
 	return nil
 }
 
-func (cont *Cont) gracefulStop() error {
+func (cont *Cont) GracefulStop() error {
 	close(cont.doneChan)
 	for _, server := range cont.servers {
 		if err := server.srv.GracefulStop(); err != nil {
