@@ -215,7 +215,9 @@ func (cont *Cont) Serve() error {
 }
 
 func (cont *Cont) Stop() error {
-	close(cont.doneChan)
+	if cont.doneChan != nil {
+		close(cont.doneChan)
+	}
 	for _, server := range cont.servers {
 		if err := server.srv.Stop(); err != nil {
 			return err
@@ -226,7 +228,9 @@ func (cont *Cont) Stop() error {
 }
 
 func (cont *Cont) GracefulStop() error {
-	close(cont.doneChan)
+	if cont.doneChan != nil {
+		close(cont.doneChan)
+	}
 	for _, server := range cont.servers {
 		if err := server.srv.GracefulStop(); err != nil {
 			return err
@@ -253,7 +257,10 @@ func (cont *Cont) upgrade() error {
 
 func (cont *Cont) closeListeners() {
 	// close chan to notify Serve to exit and ignore
-	close(cont.doneChan)
+	if cont.doneChan != nil {
+		close(cont.doneChan)
+	}
+
 	for _, server := range cont.servers {
 		if err := server.lis.Close(); err != nil {
 			cont.logger.Error("close listener failed", logbunny.Err(err), logbunny.String("listenon", server.listenOn.Address))
