@@ -225,7 +225,7 @@ func (cont *Cont) gracefulStop() error {
 func (cont *Cont) upgrade() error {
 	// rename pidfile to pidfile.old
 	if err := os.Rename(cont.pidfile, cont.pidfile+".old"); err != nil {
-		return err
+		cont.logger.Warn("rename pid file failed", logbunny.Err(err))
 	}
 
 	pid, err := cont.net.StartProcess()
