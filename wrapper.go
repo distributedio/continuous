@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc"
 )
@@ -16,7 +17,8 @@ func (s *httpServer) Stop() error {
 	return s.Server.Close()
 }
 func (s *httpServer) GracefulStop() error {
-	return s.Server.Shutdown(context.Background())
+	ctx, _ := context.WithTimeout(context.Background(), time.Second)
+	return s.Server.Shutdown(ctx)
 }
 
 func WrapHTTPServer(s *http.Server) Continuous {
