@@ -151,7 +151,9 @@ func (cont *Cont) Serve() error {
 		return err
 	}
 
-	cont.serve()
+	if err := cont.serve(); err != nil {
+		return err
+	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGUSR2, syscall.SIGUSR1, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGCHLD)
@@ -173,7 +175,11 @@ func (cont *Cont) Serve() error {
 				cont.closeListeners()
 			} else if cont.state == Ready {
 				cont.wg.Wait() //wait server goroutines to exit
-				cont.serve()   //listen and serve again
+				//listen and serve again
+				if err := cont.serve(); err != nil {
+					cont.logger.Error("start serve fail", logbunny.Err(err))
+					continue
+				}
 				cont.state = Running
 			}
 
@@ -192,7 +198,6 @@ func (cont *Cont) Serve() error {
 				continue
 			}
 			return nil
-
 		case syscall.SIGCHLD:
 			p, err := os.FindProcess(cont.child)
 			if err != nil {
