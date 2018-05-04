@@ -17,7 +17,8 @@ func (s *httpServer) Stop() error {
 	return s.Server.Close()
 }
 func (s *httpServer) GracefulStop() error {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 	return s.Server.Shutdown(ctx)
 }
 
