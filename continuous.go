@@ -122,8 +122,7 @@ func New(opts ...Option) *Cont {
 			fmt.Println(err)
 			os.Exit(-1)
 		}
-		logger.With(logbunny.Int("PID", os.Getpid()))
-		cont.logger = logger
+		cont.logger = logger.With(logbunny.Int("PID", os.Getpid()))
 	}
 
 	return cont
