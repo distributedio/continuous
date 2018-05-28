@@ -116,11 +116,13 @@ func New(opts ...Option) *Cont {
 	}
 
 	if cont.logger == nil {
-		logger, err := logbunny.New(logbunny.WithDebugLevel(), logbunny.WithPID())
+		logger, err := logbunny.New(logbunny.WithDebugLevel(), logbunny.WithCaller())
+
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(-1)
 		}
+		logger.With(logbunny.Int("PID", os.Getpid()))
 		cont.logger = logger
 	}
 
