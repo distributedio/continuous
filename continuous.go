@@ -209,11 +209,16 @@ func (cont *Cont) Serve() error {
 			if err != nil {
 				cont.logger.Error("wait child process to exit failed", logbunny.Err(err))
 			} else {
-				cont.logger.Info("child exited", logbunny.Stringer("status", status))
+				if status.Success() {
+					cont.logger.Info("child exited", logbunny.Stringer("status", status))
+				} else {
+					cont.logger.Error("child exited failed", logbunny.Stringer("status", status))
+				}
 			}
 
 			// rename pidfile to pidfile.old
-			if err := os.Rename(cont.pidfile+".old", cont.pidfile); err != nil {
+			os.Remove(cont.pidfile + ".old")
+			if err := os.Rename(cont.pidfile, cont.pidfile+".old"); err != nil {
 				cont.logger.Error("recover pid file failed", logbunny.Err(err))
 			}
 		}
@@ -280,7 +285,8 @@ func (cont *Cont) closeListeners() {
 func (cont *Cont) serve() error {
 	cont.doneChan = make(chan struct{})
 
-	for _, server := range cont.servers {
+	for i := range cont.servers {
+		server := cont.servers[i]
 		lis, err := cont.net.Listen(server.listenOn.Network, server.listenOn.Address)
 		if err != nil {
 			return err
