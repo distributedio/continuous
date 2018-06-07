@@ -216,9 +216,8 @@ func (cont *Cont) Serve() error {
 				}
 			}
 
-			// rename pidfile to pidfile.old
-			os.Remove(cont.pidfile + ".old")
-			if err := os.Rename(cont.pidfile, cont.pidfile+".old"); err != nil {
+			// recover pidfile.old to pidfile
+			if err := os.Rename(cont.pidfile+".old", cont.pidfile); err != nil {
 				cont.logger.Error("recover pid file failed", logbunny.Err(err))
 			}
 		}
@@ -285,8 +284,7 @@ func (cont *Cont) closeListeners() {
 func (cont *Cont) serve() error {
 	cont.doneChan = make(chan struct{})
 
-	for i := range cont.servers {
-		server := cont.servers[i]
+	for _, server := range cont.servers {
 		lis, err := cont.net.Listen(server.listenOn.Network, server.listenOn.Address)
 		if err != nil {
 			return err
