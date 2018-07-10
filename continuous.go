@@ -137,12 +137,19 @@ func TLSConfig(c *tls.Config) func(cs *ContServer) {
 }
 
 // AddServer and a server which implement Continuous interface
-func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOption) {
+// the added server will start to listen to the socket, but it only accept connections after serving
+func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOption) error {
 	cs := &ContServer{srv: srv, listenOn: listenOn}
 	for _, o := range opts {
 		o(cs)
 	}
+	lis, err := cont.net.Listen(listenOn.Network, listenOn.Address)
+	if err != nil {
+		return err
+	}
+	cs.lis = lis
 	cont.servers = append(cont.servers, cs)
+	return nil
 }
 
 // Serve run all the servers and wait to handle signals
@@ -177,8 +184,12 @@ func (cont *Cont) Serve() error {
 			} else if cont.state == Ready {
 				cont.wg.Wait() //wait server goroutines to exit
 				//listen and serve again
+				if err := cont.openListeners(); err != nil {
+					cont.logger.Error("open listeners failed", logbunny.Err(err))
+					continue
+				}
 				if err := cont.serve(); err != nil {
-					cont.logger.Error("start serve fail", logbunny.Err(err))
+					cont.logger.Error("start serve failed", logbunny.Err(err))
 					continue
 				}
 				cont.state = Running
@@ -281,9 +292,7 @@ func (cont *Cont) closeListeners() {
 	cont.net = gnet.Net{}
 }
 
-func (cont *Cont) serve() error {
-	cont.doneChan = make(chan struct{})
-
+func (cont *Cont) openListeners() error {
 	for _, server := range cont.servers {
 		lis, err := cont.net.Listen(server.listenOn.Network, server.listenOn.Address)
 		if err != nil {
@@ -293,7 +302,14 @@ func (cont *Cont) serve() error {
 		if server.tlsConfig != nil {
 			server.lis = tls.NewListener(lis, server.tlsConfig)
 		}
+	}
+	return nil
+}
 
+func (cont *Cont) serve() error {
+	cont.doneChan = make(chan struct{})
+
+	for _, server := range cont.servers {
 		cont.wg.Add(1)
 		go func(server *ContServer) {
 			done := false
