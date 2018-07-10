@@ -235,9 +235,11 @@ func (cont *Cont) Serve() error {
 	}
 }
 
+// Stop the server immediately
 func (cont *Cont) Stop() error {
 	if cont.doneChan != nil {
 		close(cont.doneChan)
+		cont.doneChan = nil
 	}
 	for _, server := range cont.servers {
 		if err := server.srv.Stop(); err != nil {
@@ -248,9 +250,11 @@ func (cont *Cont) Stop() error {
 	return nil
 }
 
+// GracefulStop the server
 func (cont *Cont) GracefulStop() error {
 	if cont.doneChan != nil {
 		close(cont.doneChan)
+		cont.doneChan = nil
 	}
 	for _, server := range cont.servers {
 		if err := server.srv.GracefulStop(); err != nil {
@@ -280,6 +284,7 @@ func (cont *Cont) closeListeners() {
 	// close chan to notify Serve to exit and ignore
 	if cont.doneChan != nil {
 		close(cont.doneChan)
+		cont.doneChan = nil
 	}
 
 	for _, server := range cont.servers {
