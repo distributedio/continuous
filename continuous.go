@@ -34,7 +34,6 @@ type Cont struct {
 	state    ContState
 	wg       sync.WaitGroup
 	doneChan chan struct{}
-	upgrader func(lis net.Listener) net.Listener
 }
 
 // ContState indicates the state of Cont
@@ -70,6 +69,7 @@ type ContServer struct {
 	srv       Continuous
 	listenOn  *ListenOn
 	tlsConfig *tls.Config
+	upgrader  func(lis net.Listener) net.Listener
 }
 
 // Option to new a Cont
@@ -100,13 +100,6 @@ func UseLogger(logger logbunny.Logger) Option {
 func PidFile(filename string) Option {
 	return func(cont *Cont) {
 		cont.pidfile = filename
-	}
-}
-
-// ListenerUpgrader upgrade a raw listener to a higher level listener
-func ListenerUpgrader(upgrader func(lis net.Listener) net.Listener) Option {
-	return func(cont *Cont) {
-		cont.upgrader = upgrader
 	}
 }
 
@@ -144,6 +137,13 @@ func TLSConfig(c *tls.Config) func(cs *ContServer) {
 	}
 }
 
+// ListenerUpgrader upgrade a raw listener to a higher level listener
+func ListenerUpgrader(upgrader func(lis net.Listener) net.Listener) ServerOption {
+	return func(cs *ContServer) {
+		cs.upgrader = upgrader
+	}
+}
+
 // AddServer and a server which implement Continuous interface
 // the added server will start to listen to the socket, but it only accept connections after serving
 func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOption) error {
@@ -155,8 +155,8 @@ func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOp
 	if err != nil {
 		return err
 	}
-	if cont.upgrader != nil {
-		lis = cont.upgrader(lis)
+	if cs.upgrader != nil {
+		lis = cs.upgrader(lis)
 	}
 	cs.lis = lis
 	cont.servers = append(cont.servers, cs)
@@ -314,8 +314,8 @@ func (cont *Cont) openListeners() error {
 		if err != nil {
 			return err
 		}
-		if cont.upgrader != nil {
-			lis = cont.upgrader(lis)
+		if server.upgrader != nil {
+			lis = server.upgrader(lis)
 		}
 		server.lis = lis
 		if server.tlsConfig != nil {
