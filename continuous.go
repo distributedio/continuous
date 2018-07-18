@@ -34,6 +34,7 @@ type Cont struct {
 	state    ContState
 	wg       sync.WaitGroup
 	doneChan chan struct{}
+	upgrader func(lis net.Listener) net.Listener
 }
 
 // ContState indicates the state of Cont
@@ -102,6 +103,13 @@ func PidFile(filename string) Option {
 	}
 }
 
+// ListenerUpgrader upgrade a raw listener to a higher level listener
+func ListenerUpgrader(upgrader func(lis net.Listener) net.Listener) Option {
+	return func(cont *Cont) {
+		cont.upgrader = upgrader
+	}
+}
+
 // New creates a Cont object which upgrades binary continuously
 func New(opts ...Option) *Cont {
 	dir, _ := os.Getwd()
@@ -146,6 +154,9 @@ func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOp
 	lis, err := cont.net.Listen(listenOn.Network, listenOn.Address)
 	if err != nil {
 		return err
+	}
+	if cont.upgrader != nil {
+		lis = cont.upgrader(lis)
 	}
 	cs.lis = lis
 	cont.servers = append(cont.servers, cs)
@@ -302,6 +313,9 @@ func (cont *Cont) openListeners() error {
 		lis, err := cont.net.Listen(server.listenOn.Network, server.listenOn.Address)
 		if err != nil {
 			return err
+		}
+		if cont.upgrader != nil {
+			lis = cont.upgrader(lis)
 		}
 		server.lis = lis
 		if server.tlsConfig != nil {
