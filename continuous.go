@@ -159,6 +159,9 @@ func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOp
 		lis = cs.upgrader(lis)
 	}
 	cs.lis = lis
+	if cs.tlsConfig != nil {
+		cs.lis = tls.NewListener(lis, cs.tlsConfig)
+	}
 	cont.servers = append(cont.servers, cs)
 	return nil
 }
