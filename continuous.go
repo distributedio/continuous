@@ -131,7 +131,7 @@ func New(opts ...Option) *Cont {
 
 type ServerOption func(cs *ContServer)
 
-func TLSConfig(c *tls.Config) func(cs *ContServer) {
+func TLSConfig(c *tls.Config) ServerOption {
 	return func(cs *ContServer) {
 		cs.tlsConfig = c
 	}
