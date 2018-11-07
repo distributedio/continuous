@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	pb "github.com/grpc/grpc-go/examples/helloworld/helloworld"
-	"gitlab.meitu.com/gocommon-incubator/continuous"
+	"github.com/shafreeck/continuous"
 	"google.golang.org/grpc"
+	pb "google.golang.org/grpc/examples/helloworld/helloworld"
 )
 
 // httpServer implements the Continuous interface
