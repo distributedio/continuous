@@ -99,7 +99,7 @@ func LoggerOutput(out io.Writer) Option {
 		replace := func(c zapcore.Core) zapcore.Core {
 			return core
 		}
-		cont.logger.WithOptions(zap.WrapCore(replace))
+		cont.logger = cont.logger.WithOptions(zap.WrapCore(replace))
 	}
 }
 
