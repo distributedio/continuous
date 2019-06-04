@@ -1,6 +1,6 @@
 # Continuous
 
- [![Build Status](https://travis-ci.org/shafreeck/continuous.svg?branch=master)](https://travis-ci.org/shafreeck/continuous)
+ [![Build Status](https://travis-ci.org/distributedio/continuous.svg?branch=master)](https://travis-ci.org/distributedio/continuous)
 
 Continuous is a framework to upgrade a daemon binary without interrupt
 
