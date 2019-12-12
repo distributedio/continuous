@@ -182,14 +182,14 @@ func (cont *Cont) Serve() error {
 	}
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGUSR2, syscall.SIGUSR1, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGCHLD)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT, syscall.SIGUSR2, syscall.SIGUSR1, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGCHLD)
 	cont.logger.Debug("waiting for signals")
 
 	for {
 		sig := <-c
 		cont.logger.Info("got signal", zap.Stringer("value", sig))
 		switch sig {
-		case syscall.SIGTERM:
+		case syscall.SIGTERM, syscall.SIGINT:
 			cont.Stop()
 			return nil
 		case syscall.SIGQUIT:
