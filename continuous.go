@@ -99,7 +99,7 @@ func LoggerOutput(out io.Writer) Option {
 		replace := func(c zapcore.Core) zapcore.Core {
 			return core
 		}
-		cont.logger.WithOptions(zap.WrapCore(replace))
+		cont.logger = cont.logger.WithOptions(zap.WrapCore(replace))
 	}
 }
 
@@ -159,11 +159,11 @@ func (cont *Cont) AddServer(srv Continuous, listenOn *ListenOn, opts ...ServerOp
 	if err != nil {
 		return err
 	}
-	if cs.upgrader != nil {
-		lis = cs.upgrader(lis)
-	}
 	if cs.tlsConfig != nil {
 		lis = tls.NewListener(lis, cs.tlsConfig)
+	}
+	if cs.upgrader != nil {
+		lis = cs.upgrader(lis)
 	}
 	cs.lis = lis
 	cont.servers = append(cont.servers, cs)
