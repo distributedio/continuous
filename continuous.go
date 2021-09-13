@@ -257,7 +257,6 @@ func (cont *Cont) Serve() error {
 func (cont *Cont) Stop() error {
 	if cont.doneChan != nil {
 		close(cont.doneChan)
-		cont.doneChan = nil
 	}
 	for _, server := range cont.servers {
 		if err := server.srv.Stop(); err != nil {
@@ -272,7 +271,6 @@ func (cont *Cont) Stop() error {
 func (cont *Cont) GracefulStop() error {
 	if cont.doneChan != nil {
 		close(cont.doneChan)
-		cont.doneChan = nil
 	}
 	for _, server := range cont.servers {
 		if err := server.srv.GracefulStop(); err != nil {
@@ -302,7 +300,6 @@ func (cont *Cont) closeListeners() {
 	// close chan to notify Serve to exit and ignore
 	if cont.doneChan != nil {
 		close(cont.doneChan)
-		cont.doneChan = nil
 	}
 
 	for _, server := range cont.servers {
@@ -343,6 +340,7 @@ func (cont *Cont) serve() error {
 				select {
 				case <-cont.doneChan:
 					done = true // ignore error which caused by Stop/GracefulStop
+					cont.logger.Debug("serve close", zap.String("listen", server.listenOn.Address))
 				default:
 				}
 				if !done {
